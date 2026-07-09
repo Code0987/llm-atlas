@@ -2,6 +2,12 @@
 
 3D architecture explorer for how LLMs are layered — GPT, BERT, Enc–Dec, diffusion, MoE, and more.
 
+**Live site:** https://code0987.github.io/llm-atlas/  
+**Repository:** https://github.com/Code0987/llm-atlas
+
+
+3D architecture explorer for how LLMs are layered — GPT, BERT, Enc–Dec, diffusion, MoE, and more.
+
 ## Run
 
 ```bash
