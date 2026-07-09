@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Atlas — 3D Architecture Explorer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="canvas-wrap"></div>
+
+  <header>
+    <h1>LLM Atlas <span class="badge">3D Explorer</span></h1>
+    <div class="header-actions">
+      <button class="tool" id="btn-tour" title="Guided tour">Tour</button>
+      <button class="tool" id="btn-cutaway" title="Expand attention into Q/K/V cutaway">Cutaway</button>
+      <button class="tool" id="btn-explode" title="Spread layers">Explode</button>
+      <button class="tool active" id="btn-arrows" title="Direction arrows">Arrows</button>
+      <button class="tool" id="btn-cb" title="Colorblind-safe palette">CB</button>
+      <button class="tool" id="btn-export" title="Export PNG">PNG</button>
+      <button class="tool" id="btn-reset" title="Reset">Reset</button>
+    </div>
+  </header>
+
+  <aside id="layer-list">
+    <div class="panel-tabs mobile-only">
+      <button type="button" class="tab active" data-panel="controls">Controls</button>
+      <button type="button" class="tab" data-panel="info">Info</button>
+    </div>
+
+    <div id="controls-pane">
+      <div class="arch-select-wrap">
+        <label for="arch-select">Model type</label>
+        <select id="arch-select"></select>
+      </div>
+
+      <div class="arch-select-wrap">
+        <label for="compare-select">Compare with</label>
+        <select id="compare-select">
+          <option value="">None</option>
+        </select>
+      </div>
+
+      <div class="mode-row">
+        <label>Run mode</label>
+        <div class="seg">
+          <button type="button" class="seg-btn active" data-mode="train">Train</button>
+          <button type="button" class="seg-btn" data-mode="infer">Infer</button>
+        </div>
+        <p class="mode-blurb" id="mode-blurb"></p>
+      </div>
+
+      <div class="arch-select-wrap">
+        <label for="layer-search">Search layers</label>
+        <input id="layer-search" type="search" placeholder="attn, router, ffn…" autocomplete="off" />
+      </div>
+
+      <div class="cam-row">
+        <label>Camera</label>
+        <div class="cam-btns">
+          <button type="button" class="ctrl sm" data-cam="default">Default</button>
+          <button type="button" class="ctrl sm" data-cam="top">Top</button>
+          <button type="button" class="ctrl sm" data-cam="side">Side</button>
+          <button type="button" class="ctrl sm" data-cam="front">Front</button>
+        </div>
+      </div>
+
+      <div class="param-block">
+        <label>Hyperparameters</label>
+        <div class="param-row">
+          <div class="row-top"><span class="name">d_model</span><span class="val" id="val-d">768</span></div>
+          <input type="range" id="p-d" min="128" max="4096" step="128" value="768" />
+        </div>
+        <div class="param-row">
+          <div class="row-top"><span class="name">n_heads</span><span class="val" id="val-h">12</span></div>
+          <input type="range" id="p-h" min="1" max="32" step="1" value="12" />
+        </div>
+        <div class="param-row">
+          <div class="row-top"><span class="name">n_layers</span><span class="val" id="val-l">3</span></div>
+          <input type="range" id="p-l" min="1" max="6" step="1" value="3" />
+        </div>
+        <div class="param-row">
+          <div class="row-top"><span class="name">seq_len</span><span class="val" id="val-s">128</span></div>
+          <input type="range" id="p-s" min="16" max="512" step="16" value="128" />
+        </div>
+        <div class="param-row">
+          <div class="row-top"><span class="name">vocab (V)</span><span class="val" id="val-v">50k</span></div>
+          <input type="range" id="p-v" min="8000" max="128000" step="1000" value="50000" />
+        </div>
+        <div class="param-stats">
+          <div class="box"><div class="v" id="est-params">—</div><div class="l">Est. params</div></div>
+          <div class="box"><div class="v" id="est-flops">—</div><div class="l">Est. FLOPs / tok</div></div>
+        </div>
+        <p class="param-hint">n_layers rebuilds the stack. Other sliders update estimates &amp; toy math.</p>
+      </div>
+
+      <div class="toy-block">
+        <label>Numeric toy (dim 4)</label>
+        <p class="param-hint">Edit the vector, then step a pass to see a simplified transform per layer.</p>
+        <div class="toy-inputs" id="toy-inputs"></div>
+        <div class="toy-out" id="toy-out">Output: —</div>
+        <button type="button" class="ctrl" id="toy-reset" style="width:100%;margin-top:8px">Reset vector</button>
+      </div>
+
+    </div>
+  </aside>
+
+  <aside id="info-panel">
+    <div class="layers-block">
+      <h3>Layers</h3>
+      <div id="layer-buttons"></div>
+    </div>
+    <div class="info-body">
+      <div id="info-empty"></div>
+      <div id="info-content" style="display:none"></div>
+    </div>
+  </aside>
+
+  <div id="pass-bar">
+    <button class="ctrl" id="pass-prev" title="Previous">◀</button>
+    <button class="ctrl" id="pass-play" title="Play / pause">▶ Play</button>
+    <button class="ctrl" id="pass-next" title="Next">▶</button>
+    <button class="ctrl" id="pass-stop" title="Stop">■</button>
+    <div class="progress"><i id="pass-progress"></i></div>
+    <div class="pass-label" id="pass-label">Pass idle</div>
+    <div class="pass-step-name" id="pass-step-name">—</div>
+  </div>
+
+  <div id="tour-card">
+    <div class="tour-kicker" id="tour-kicker">Guided tour</div>
+    <h3 id="tour-title">Welcome</h3>
+    <p id="tour-body"></p>
+    <div class="tour-actions">
+      <button class="ctrl" id="tour-skip">Skip</button>
+      <button class="ctrl" id="tour-back">Back</button>
+      <button class="ctrl" id="tour-next">Next</button>
+    </div>
+  </div>
+
+  <div id="compare-badge" class="floating-badge hidden"></div>
+  <div id="cutaway-badge" class="floating-badge hidden">Cutaway · Block internals</div>
+
+  <footer>
+    <div class="hint">
+      <kbd>▶</kbd> pass · <kbd>/</kbd> search · <kbd>C</kbd> cutaway · click wire/layer ·
+      <kbd>T</kbd>/<kbd>I</kbd> train/infer · <kbd>Esc</kbd> clear
+    </div>
+  </footer>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="explorer.js"></script>
+</body>
+</html>
