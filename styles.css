@@ -32,6 +32,22 @@ header h1 .badge {
   color: var(--accent); background: rgba(110,168,255,0.12);
   border: 1px solid rgba(110,168,255,0.3); padding: 3px 7px; border-radius: 999px;
 }
+header h1 .repo-link {
+  pointer-events: auto;
+  font-size: 0.68rem; font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: rgba(20,30,50,0.85);
+  padding: 3px 9px;
+  border-radius: 999px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+header h1 .repo-link:hover {
+  color: var(--accent);
+  border-color: rgba(110,168,255,0.45);
+  background: rgba(110,168,255,0.12);
+}
 .header-actions { display: flex; gap: 6px; pointer-events: auto; margin-left: auto; flex-wrap: wrap; }
 
 button.tool, button.ctrl, button.seg-btn {
